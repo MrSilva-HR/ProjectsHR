@@ -1,0 +1,53 @@
+# Documentação do Processo: Treinamento de um Classificador de Imagens
+
+## Objetivo
+O objetivo deste projeto foi treinar uma Rede Neural Convolucional (CNN) para classificar imagens de gatos e cachorros. O processo envolveu a preparação dos dados, a construção do modelo, o treinamento e a otimização para melhorar o desempenho.
+
+---
+
+### Etapa 1: Preparação e Extração dos Dados
+
+A primeira etapa consistiu em carregar e extrair o conjunto de dados de imagens.
+
+*   **Ação Inicial:** Foi feito o upload de um arquivo `meu_dataset.rar` contendo as imagens de treino e validação.
+*   **Falha Encontrada:** O código inicial estava preparado para extrair um arquivo `.zip`, o que resultou em um erro `FileNotFoundError`, pois o programa não encontrou o arquivo zip esperado.
+*   **Solução Aplicada:**
+    1.  Instalamos a biblioteca `rarfile`, que é capaz de manipular arquivos de compressão `.rar`.
+    2.  Modificamos o script para utilizar a biblioteca `rarfile` e alteramos o nome do arquivo de `meu_dataset.zip` para `meu_dataset.rar`, garantindo que o arquivo correto fosse encontrado e extraído com sucesso.
+
+---
+
+### Etapa 2: Treinamento Inicial do Modelo e Erros de Dados
+
+Com os dados extraídos, construímos e iniciamos o treinamento de uma CNN básica.
+
+*   **Ação Inicial:** Um modelo de CNN foi definido, compilado e o processo de treinamento foi iniciado com a função `model.fit()`.
+*   **Falha Encontrada 1: Imagem Corrompida**
+    *   **Problema:** O treinamento foi abruptamente interrompido por um `UnidentifiedImageError`. Este erro indicava que pelo menos um arquivo de imagem no conjunto de dados estava corrompido ou em um formato que a biblioteca de processamento de imagens (PIL) не conseguia ler.
+    *   **Solução:** Implementamos um script auxiliar que percorreu todos os arquivos nos diretórios de treino e validação. O script tentou abrir cada imagem e, caso encontrasse um arquivo corrompido (como o `gato/666.jpg`), ele o removia do diretório.
+*   **Falha Encontrada 2: Arquivo Não Encontrado Pós-Limpeza**
+    *   **Problema:** Após a remoção da imagem corrompida, uma nova tentativa de treinamento resultou em um `FileNotFoundError`. Isso ocorreu porque os geradores de dados (`ImageDataGenerator`) foram criados *antes* da remoção do arquivo e ainda mantinham uma referência a ele.
+    *   **Solução:** Para resolver isso, a célula que cria os `ImageDataGenerator` foi executada novamente. Isso forçou os geradores a re-escanear os diretórios, agora limpos, e a criar um novo índice de arquivos válidos, eliminando a referência ao arquivo deletado.
+
+---
+
+### Etapa 3: Análise de Desempenho e Overfitting
+
+Após o treinamento ser concluído com sucesso, o próximo passo foi avaliar a performance do modelo.
+
+*   **Ação Inicial:** Plotamos gráficos da acurácia e da perda (loss) de treino e validação ao longo das épocas.
+*   **Falha Encontrada (Conceitual): Overfitting**
+    *   **Problema:** Os gráficos mostraram um claro sinal de **overfitting**. A acurácia de treino aproximava-se de 100%, enquanto a acurácia de validação estagnava em um nível muito mais baixo. Isso significa que o modelo estava "decorando" os dados de treino, mas não conseguia generalizar seu aprendizado para novas imagens (os dados de validação).
+    *   **Solução:** Para combater o overfitting, adicionamos uma camada de **Dropout** ao modelo. Dropout é uma técnica de regularização que desativa aleatoriamente uma fração dos neurônios durante o treinamento, forçando a rede a aprender padrões mais robustos e menos dependentes de neurônios específicos.
+
+---
+
+### Etapa 4: Retreinamento e Avaliação Final
+
+Com o modelo aprimorado, realizamos o processo de treinamento novamente.
+
+*   **Ação Inicial:** O novo modelo, agora com a camada de Dropout, foi recompilado e treinado novamente com os mesmos dados.
+*   **Resultado:** Plotamos novamente os gráficos de acurácia e perda. Desta vez, as curvas de treino e validação estavam muito mais próximas, indicando que o overfitting foi significativamente reduzido. O modelo final apresentou um desempenho mais equilibrado e uma capacidade de generalização muito melhor.
+
+## Conclusão
+O processo demonstrou um fluxo de trabalho comum em projetos de Deep Learning: partindo de um modelo base, encontramos e solucionamos problemas relacionados aos dados (arquivos corrompidos) e ao próprio modelo (overfitting). Ao final, chegamos a um modelo mais robusto e eficaz.
